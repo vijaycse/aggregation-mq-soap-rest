@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><Graph __version="3.5.0" author="vijay" created="Wed Mar 25 12:56:12 EDT 2015" description="Xml&lt;GetHolidaysAvailableResponse&gt; To Map" guiVersion="3.4.4.P" id="1427328747566" licenseCode="Unlicensed" licenseType="Unknown" modified="Wed Mar 25 12:56:12 EDT 2015" modifiedBy="vijay" name="Xml_GetHolidaysAvailableResponse__To_Map" revision="1.0" showComponentDetails="false">
+<Global>
+<Metadata __filteredMetadata="false" __index="0" __referenceCounter="1" __sourcePath="{http://www.holidaywebservice.com/HolidayService_v2/=ns0}/ns0:GetHolidaysAvailableResponse" _dataStructure="OBJECT" _id="__id" _type="Input" id="6224ec35-b53a-4719-ab6f-b7ec408d8443">
+<Record fieldDelimiter="," name="GetHolidaysAvailableResponse" recordDelimiter="\n\\|\r\n\\|\r" type="delimited">
+<Field __artificialType="_id" __systemManaged="true" name="__id" type="string"/>
+</Record>
+</Metadata>
+<Metadata __index="0" __referenceCounter="1" __sourcePath="{}/GetHolidaysAvailableResponse" _dataStructure="OBJECT" _id="__id" _type="Output" id="b06772ae-5c93-4b90-ad0f-7b52407321d5">
+<Record fieldDelimiter="," name="GetHolidaysAvailableResponse" recordDelimiter="\n\\|\r\n\\|\r" type="delimited">
+<Field __artificialType="_id" __systemManaged="true" name="__id" type="string"/>
+</Record>
+</Metadata>
+<Metadata __index="0" __referenceCounter="1" __schemaType="{http://www.holidaywebservice.com/HolidayService_v2/}HolidayCode" __sourcePath="{http://www.holidaywebservice.com/HolidayService_v2/=ns0}/ns0:GetHolidaysAvailableResponse/ns0:GetHolidaysAvailableResult/ns0:HolidayCode" _dataStructure="SINGLE_DIMENSIONAL_COLLECTION" _id="__id" _metadataParentId="6224ec35-b53a-4719-ab6f-b7ec408d8443" _parent_id="__parent_id" _type="Input" id="36d63a9e-810b-40cf-8e42-549348083c96">
+<Record fieldDelimiter="," name="HolidayCode" recordDelimiter="\n\\|\r\n\\|\r" type="delimited">
+<Field __artificialType="_parent_id" __systemManaged="true" name="__parent_id" type="string"/>
+<Field __artificialType="_id" __systemManaged="true" name="__id" type="string"/>
+<Field __index="0" __schemaType="{http://www.holidaywebservice.com/HolidayService_v2/}HolidayCode" __sourcePath="{http://www.holidaywebservice.com/HolidayService_v2/=ns0}/ns0:GetHolidaysAvailableResponse/ns0:GetHolidaysAvailableResult/ns0:HolidayCode/ns0:Code" containerType="SINGLE" label="Code" name="Code" type="string"/>
+<Field __index="1" __schemaType="{http://www.holidaywebservice.com/HolidayService_v2/}HolidayCode" __sourcePath="{http://www.holidaywebservice.com/HolidayService_v2/=ns0}/ns0:GetHolidaysAvailableResponse/ns0:GetHolidaysAvailableResult/ns0:HolidayCode/ns0:Description" containerType="SINGLE" label="Description" name="Description" type="string"/>
+</Record>
+</Metadata>
+<Metadata __index="0" __referenceCounter="1" __sourcePath="{}/GetHolidaysAvailableResponse/GetHolidaysAvailableResult/HolidayCode" _dataStructure="SINGLE_DIMENSIONAL_COLLECTION" _id="__id" _metadataParentId="b06772ae-5c93-4b90-ad0f-7b52407321d5" _parent_id="__parent_id" _type="Output" id="e9765f1c-bb54-431b-b25f-ff9f0d5c8311">
+<Record fieldDelimiter="," name="HolidayCode" recordDelimiter="\n\\|\r\n\\|\r" type="delimited">
+<Field __artificialType="_id" __systemManaged="true" name="__id" type="string"/>
+<Field __artificialType="_parent_id" __systemManaged="true" name="__parent_id" type="string"/>
+<Field __index="0" __sourcePath="{}/GetHolidaysAvailableResponse/GetHolidaysAvailableResult/HolidayCode/Code" containerType="SINGLE" label="Code" name="Code" type="string"/>
+<Field __index="1" __sourcePath="{}/GetHolidaysAvailableResponse/GetHolidaysAvailableResult/HolidayCode/Description" containerType="SINGLE" label="Description" name="Description" type="string"/>
+</Record>
+</Metadata>
+<Dictionary>
+<Entry id="DictionaryEntry0" input="true" name="inputPayload" output="false" type="object"/>
+<Entry id="DictionaryEntry1" input="false" name="outputPayload" output="true" type="object"/>
+</Dictionary>
+</Global>
+<Phase number="0">
+<Node enabled="enabled" guiName="Foreach 'ns0:GetHolidaysAvailableResponse' -&gt; 'GetHolidaysAvailableResponse'" guiX="460" guiY="20" id="FOREACH_NS0_GET_HOLIDAYS_AVAILABLE_RESPONSE_GET_HOLIDAYS_AVAILABLE_RESPONSE" transformClass="com.mulesoft.datamapper.transform.MelRecordTransform" type="REFORMAT">
+<attr name="melScript"><![CDATA[//MEL
+//START -> DO NOT REMOVE
+output.__id = input.__id;
+//END -> DO NOT REMOVE
+]]></attr>
+</Node>
+<Node enabled="enabled" guiName="Foreach 'ns0:HolidayCode' -&gt; 'HolidayCode'" guiX="460" guiY="120" id="FOREACH_NS0_HOLIDAY_CODE_HOLIDAY_CODE" transformClass="com.mulesoft.datamapper.transform.MelRecordTransform" type="REFORMAT">
+<attr name="melScript"><![CDATA[//MEL
+//START -> DO NOT REMOVE
+output.__id = input.__id;
+output.__parent_id = input.__parent_id;
+//END -> DO NOT REMOVE
+output.Code = input.Code;
+output.Description = input.Description;
+]]></attr>
+</Node>
+<Node cacheInMemory="true" enabled="enabled" fileURL="dict:outputPayload" guiName="Map&lt;k,v&gt; WRITER" guiX="900" guiY="20" id="MAP_WRITER0" type="MAP_WRITER">
+<attr name="mapping"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<GetHolidaysAvailableResponse xmlns:clover="http://www.cloveretl.com/ns/xmlmapping" clover:inPort="0">
+  <GetHolidaysAvailableResult>
+    <clover:collection clover:name="HolidayCode">
+      <item clover:inPort="1" clover:key="__parent_id" clover:parentKey="__id">
+        <Code>$1.Code</Code>
+        <Description>$1.Description</Description>
+      </item>
+    </clover:collection>
+  </GetHolidaysAvailableResult>
+</GetHolidaysAvailableResponse>]]></attr>
+<attr name="_data_format"><![CDATA[MAP]]></attr>
+</Node>
+<Node charset="UTF-8" enabled="enabled" fileURL="dict:inputPayload" guiName="XML READER" guiX="20" guiY="20" id="XML_READER0" type="XML_READER">
+<attr name="mapping"><![CDATA[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Context namespacePaths="ns0=&quot;http://www.holidaywebservice.com/HolidayService_v2/&quot;" outPort="0" sequenceField="__id" xpath="/ns0:GetHolidaysAvailableResponse">
+  <Context generatedKey="__parent_id" namespacePaths="ns0=&quot;http://www.holidaywebservice.com/HolidayService_v2/&quot;" outPort="1" parentKey="__id" sequenceField="__id" xpath="ns0:GetHolidaysAvailableResult/ns0:HolidayCode">
+    <Mapping cloverField="Code" namespacePaths="ns0=&quot;http://www.holidaywebservice.com/HolidayService_v2/&quot;" trim="true" xpath="ns0:Code"/>
+    <Mapping cloverField="Description" namespacePaths="ns0=&quot;http://www.holidaywebservice.com/HolidayService_v2/&quot;" trim="true" xpath="ns0:Description"/>
+  </Context>
+</Context>
+]]></attr>
+<attr name="_data_format"><![CDATA[XML]]></attr>
+<attr name="__metadata"><![CDATA[true]]></attr>
+</Node>
+<Edge debugMode="true" fromNode="FOREACH_NS0_GET_HOLIDAYS_AVAILABLE_RESPONSE_GET_HOLIDAYS_AVAILABLE_RESPONSE:0" guiBendpoints="" id="Edge1" inPort="Port 0 (in)" metadata="b06772ae-5c93-4b90-ad0f-7b52407321d5" outPort="Port 0 (out)" toNode="MAP_WRITER0:0"/>
+<Edge debugMode="true" fromNode="FOREACH_NS0_HOLIDAY_CODE_HOLIDAY_CODE:0" guiBendpoints="" id="Edge3" inPort="Port 1 (in)" metadata="e9765f1c-bb54-431b-b25f-ff9f0d5c8311" outPort="Port 0 (out)" toNode="MAP_WRITER0:1"/>
+<Edge debugMode="true" fromNode="XML_READER0:0" guiBendpoints="" id="Edge0" inPort="Port 0 (in)" metadata="6224ec35-b53a-4719-ab6f-b7ec408d8443" outPort="Port 0 (out)" toNode="FOREACH_NS0_GET_HOLIDAYS_AVAILABLE_RESPONSE_GET_HOLIDAYS_AVAILABLE_RESPONSE:0"/>
+<Edge debugMode="true" fromNode="XML_READER0:1" guiBendpoints="" id="Edge2" inPort="Port 0 (in)" metadata="36d63a9e-810b-40cf-8e42-549348083c96" outPort="Port 1 (out)" toNode="FOREACH_NS0_HOLIDAY_CODE_HOLIDAY_CODE:0"/>
+</Phase>
+</Graph>

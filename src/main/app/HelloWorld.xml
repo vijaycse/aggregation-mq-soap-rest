@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schema/mule/ee/data-mapper/current/mule-data-mapper.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd"
+	version="EE-3.5.1">
+    <spring:beans>
+        <spring:bean name="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+            <spring:property name="brokerURL" value="tcp://localhost:61616/"/>
+            <spring:property name="redeliveryPolicy">
+                <spring:bean class="org.apache.activemq.RedeliveryPolicy">
+                    <spring:property name="initialRedeliveryDelay" value="20000"/>
+                    <spring:property name="redeliveryDelay" value="20000"/>
+                    <spring:property name="maximumRedeliveries" value="10"/>
+                </spring:bean>
+            </spring:property>
+            <!-- to support XA transactions, use org.apache.activemq.ActiveMQXAConnectionFactory 
+    		instead -->
+        </spring:bean>
+    </spring:beans>
+
+    <ws:consumer-config name="Web_Service_Consumer" wsdlLocation="http://www.holidaywebservice.com//HolidayService_v2/HolidayService2.asmx?wsdl" service="HolidayService2" port="HolidayService2Soap12" serviceAddress="http://www.holidaywebservice.com/HolidayService_v2/HolidayService2.asmx" doc:name="Web Service Consumer"/>
+    <data-mapper:config name="Xml_GetHolidaysAvailableResponse__To_Map" transformationGraphPath="xml_getholidaysavailableresponse__to_map.grf" doc:name="Xml_GetHolidaysAvailableResponse__To_Map"/>
+    <!-- <jms:activemq-connector name="Active_MQ" username="admin" password="admin" brokerURL="tcp://localhost:8161" validateConnections="true" doc:name="Active MQ"/> -->
+    <jms:activemq-connector name="jmsConnector" connectionFactory-ref="connectionFactory" doc:name="Active MQ"/>
+    <vm:connector name="VM" validateConnections="true" doc:name="VM"/>
+
+
+
+	<flow name="forkAndJoinFlow" doc:name="forkAndJoinFlow">
+		<http:inbound-endpoint exchange-pattern="request-response"
+			host="localhost" port="81" path="lowestprice" doc:name="HTTP" />
+		<not-filter doc:name="Not">
+			<wildcard-filter pattern="*favicon*" caseSensitive="true" />
+		</not-filter>
+        <logger message="payload input #[payload]" level="INFO" doc:name="Logger"/>
+        <scatter-gather doc:name="Scatter-Gather">
+            <flow-ref name="SOAPWeather" doc:name="SOAP Service"/>
+            <flow-ref name="RESTWeather" doc:name="Rest Service"/>
+            <vm:outbound-endpoint path="queueInsert" name="queuePut" doc:name="sendQueue" exchange-pattern="one-way"/>
+
+        </scatter-gather>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+
+		<logger level="WARN" message="#[string:combined out: #[payload]]"
+			doc:name="Logger" />
+	</flow>
+  
+    <sub-flow name="SOAPWeather" doc:name="SOAPWeather">
+    	<!-- <vm:inbound-endpoint path="shop2" doc:name="VM" /> -->
+        <set-payload value="&lt;soap:Envelope xmlns:soap=&quot;http://www.w3.org/2003/05/soap-envelope/&quot; xmlns:hol=&quot;http://www.holidaywebservice.com/HolidayService_v2/&quot;&gt;&lt;soap:Header/&gt;&lt;soap:Body&gt;&lt;hol:GetHolidaysAvailable&gt;&lt;hol:countryCode&gt;replaceme&lt;/hol:countryCode&gt;&lt;/hol:GetHolidaysAvailable&gt;&lt;/soap:Body&gt;&lt;/soap:Envelope&gt;" doc:name="Set Payload"/>
+        <logger message="payload in soap #[payload]" level="INFO" doc:name="Logger"/>
+        <scripting:transformer doc:name="Groovy">
+            <scripting:script engine="Groovy"><![CDATA[log.info "${message.getInboundProperty('countryName')}"
+def countryName = "${message.getInboundProperty('countryName')}";
+return payload.replace('replaceme', countryName);]]></scripting:script>
+        </scripting:transformer>
+        <logger message="grovvy payload #[payload]" level="INFO" doc:name="Logger"/>
+
+        <ws:consumer config-ref="Web_Service_Consumer" operation="GetHolidaysAvailable" doc:name="Web Service Consumer"/>
+        <data-mapper:transform config-ref="Xml_GetHolidaysAvailableResponse__To_Map" doc:name="Xml&lt;GetHolidaysAvailableResponse&gt; To Map"/>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+
+        <logger message="SOAP out  #[message.payload]" level="INFO" doc:name="Logger"/>
+     </sub-flow>
+    <sub-flow name="RESTWeather" doc:name="RESTWeather">
+
+
+        <http:outbound-endpoint exchange-pattern="request-response" host="api.openweathermap.org" port="80" path="data/2.5/weather?q=#[message.inboundProperties['cityName']],#[message.inboundProperties['countryName']]&amp;mode=xml" method="GET" doc:name="HTTP"/>
+
+        <json:xml-to-json-transformer doc:name="XML to JSON"/>
+        <logger message="rest weather out #[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <flow name="queueInsert" doc:name="queueInsert">
+        <vm:inbound-endpoint exchange-pattern="one-way"  doc:name="VM" connector-ref="VM" path="queueInsert"/>
+       
+        <!-- <jms:inbound-endpoint  connector-ref="jmsConnector" doc:name="JMS" queue="foo.bar"/> -->
+        <jms:outbound-endpoint connector-ref="jmsConnector"  queue="foo.bar" doc:name="JMS">
+        	<!-- <xa-transaction action="ALWAYS_BEGIN" /> -->
+   		 </jms:outbound-endpoint>
+        <echo-component doc:name="Echo"/>
+    </flow>
+    <flow name="queueRead" doc:name="queueRead">
+
+        <!-- <jms:inbound-endpoint  connector-ref="jmsConnector" doc:name="JMS" queue="foo.bar"/> -->
+        <jms:inbound-endpoint connector-ref="jmsConnector"  queue="foo.bar" doc:name="JMS">
+        	<!--  <idempotent-redelivery-policy  idExpression="ID:ram-61709-1411349618201-3:1:1:1:1" /> -->
+        	<!-- <xa-transaction action="ALWAYS_BEGIN" /> -->
+   		 </jms:inbound-endpoint>
+        <component class="com.activemq.processor.MessageReceiver" doc:name="Java"/>
+       
+     
+
+    </flow>
+
+</mule>
